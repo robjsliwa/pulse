@@ -2,8 +2,6 @@ module github.com/robjsliwa/pulse
 
 go 1.23.0
 
-toolchain go1.24.2
-
 require (
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/requestid v1.0.1
