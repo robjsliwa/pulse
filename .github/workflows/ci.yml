@@ -18,6 +18,8 @@ jobs:
         with:
           go-version: '1.22.x'
           cache: true
+          check-latest: true
+          cache-dependency-path: go.sum
 
       - name: Tidy modules
         run: |
@@ -28,10 +30,16 @@ jobs:
         run: |
           go install github.com/swaggo/swag/cmd/swag@v1.16.3
 
+      - name: Clear Go caches (defensive)
+        run: |
+          go clean -cache -testcache
+
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59.1
+        env:
+          GOTOOLCHAIN: local
 
       - name: Vet
         run: go vet ./...
