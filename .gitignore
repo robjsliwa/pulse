@@ -1,0 +1,33 @@
+# Binaries and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+bin/
+build/
+dist/
+
+# Coverage and reports
+coverage/
+coverage.out
+*.coverprofile
+*.cov
+.coverage
+
+# Dependencies (optional; keep if not vendoring)
+vendor/
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local env and runtime data
+.env
+pulse.db
+

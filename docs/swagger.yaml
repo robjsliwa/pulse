@@ -1,0 +1,355 @@
+basePath: /
+definitions:
+  adapters_http.CreateOption:
+    properties:
+      text:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - text
+    type: object
+  adapters_http.CreatePollRequest:
+    properties:
+      description:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/adapters_http.CreateOption'
+        type: array
+      threshold:
+        type: integer
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - options
+    - title
+    type: object
+  adapters_http.UpdatePollRequest:
+    properties:
+      description:
+        type: string
+      threshold:
+        type: integer
+      title:
+        type: string
+    type: object
+  adapters_http.VoteRequest:
+    properties:
+      option_id:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - option_id
+    type: object
+  domain.Option:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      pollID:
+        type: integer
+      text:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.Poll:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      options:
+        items:
+          $ref: '#/definitions/domain.Option'
+        type: array
+      status:
+        $ref: '#/definitions/domain.PollStatus'
+      threshold:
+        description: optional threshold to trigger webhook
+        type: integer
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.PollStatus:
+    enum:
+    - open
+    - closed
+    type: string
+    x-enum-varnames:
+    - PollOpen
+    - PollClosed
+  domain.Results:
+    properties:
+      optionVotes:
+        additionalProperties:
+          type: integer
+        type: object
+      pollID:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.Vote:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      optionID:
+        type: integer
+      pollID:
+        type: integer
+      userID:
+        description: optional identifier
+        type: string
+    type: object
+  gin.H:
+    additionalProperties: {}
+    type: object
+info:
+  contact: {}
+  description: Live polls & reactions service.
+  title: Pulse API
+  version: 0.1.0
+paths:
+  /polls:
+    get:
+      parameters:
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Poll'
+            type: array
+      summary: List polls
+      tags:
+      - polls
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Poll
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/adapters_http.CreatePollRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Poll'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Create a poll
+      tags:
+      - polls
+  /polls/{id}:
+    delete:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete a poll
+      tags:
+      - polls
+    get:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Poll'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Get a poll
+      tags:
+      - polls
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Poll
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/adapters_http.UpdatePollRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Poll'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Update a poll
+      tags:
+      - polls
+  /polls/{id}/close:
+    post:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Poll'
+      summary: Close a poll
+      tags:
+      - polls
+  /polls/{id}/options:
+    get:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Option'
+            type: array
+      summary: List options for a poll
+      tags:
+      - options
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Option
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/adapters_http.CreateOption'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Option'
+      summary: Add an option to poll
+      tags:
+      - options
+  /polls/{id}/results:
+    get:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Results'
+      summary: Current poll results
+      tags:
+      - results
+  /polls/{id}/results/stream:
+    get:
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - text/event-stream
+      responses: {}
+      summary: Stream poll results via SSE
+      tags:
+      - results
+  /polls/{id}/votes:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Vote
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/adapters_http.VoteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Vote'
+      summary: Cast a vote
+      tags:
+      - votes
+swagger: "2.0"
